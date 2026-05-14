@@ -758,11 +758,6 @@
     if (assigneeId)          payload.assignee = { accountId: assigneeId };
     if (reporterAccountId)   payload.reporter = { accountId: reporterAccountId };
 
-    // Epic name field required for Epics
-    if (issueType === 'Epic') {
-      payload.customfield_10011 = document.getElementById('summary').value.trim();
-    }
-
     return payload;
   }
 
