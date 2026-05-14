@@ -94,7 +94,7 @@ color: #006aff;
 margin-top: 0.45rem;
 opacity: 0.8;
 }
-.desc-paste-hint svg { flex-shrink: 0; }
+.desc-paste-hint svg { flex-shrink: none; }
 
 /* Paste preview grid */
 #pasted-previews {
@@ -261,6 +261,37 @@ cursor: pointer; font-size: 14px; padding: 0 2px; flex-shrink: 0;
 .link-item-rm:hover { color: #e53e3e; }
 .links-hint { font-size: 0.75rem; color: #9aa0b1; margin-top: 0.4rem; }
 
+/* Assignee input with domain suffix */
+.assignee-wrap {
+display: flex;
+align-items: center;
+border: 1.5px solid #d8dce6;
+border-radius: 8px;
+overflow: hidden;
+background: #fff;
+transition: border-color .15s, box-shadow .15s;
+}
+.assignee-wrap:focus-within {
+border-color: #006aff;
+box-shadow: 0 0 0 3px rgba(0,106,255,.12);
+}
+.assignee-wrap input {
+border: none !important;
+box-shadow: none !important;
+border-radius: 0 !important;
+flex: 1;
+min-width: 0;
+}
+.assignee-wrap input:focus { box-shadow: none !important; }
+.assignee-domain {
+padding: 0.55rem 0.7rem 0.55rem 0;
+font-size: 0.875rem;
+color: #9aa0b1;
+white-space: nowrap;
+user-select: none;
+pointer-events: none;
+}
+
 /* Assignee status */
 .assignee-status { font-size: 0.75rem; margin-top: 0.3rem; height: 1.1rem; }
 .assignee-status.ok { color: #2d8a4e; }
@@ -411,8 +442,11 @@ Paste a screenshot directly here with <strong>Ctrl+V</strong> / <strong>⌘+V</s
 </div>
 
 <div class="field">
-<label for="assignee">Assignee <span class="opt">(Zillow Group email)</span></label>
-<input type="email" id="assignee" placeholder="colleague@zillowgroup.com" autocomplete="off" />
+<label for="assignee">Assignee <span class="opt">(username only)</span></label>
+<div class="assignee-wrap">
+<input type="text" id="assignee" placeholder="e.g. simondu" autocomplete="off" spellcheck="false" />
+<span class="assignee-domain">@zillowgroup.com</span>
+</div>
 <div class="assignee-status" id="assigneeStatus"></div>
 </div>
 </div>
@@ -583,7 +617,7 @@ renderPastedPreviews();
 renderFileList();
 });
 
-/* ── File picker ──────────────────────────────────────────── */
+/* ── File picker ──────────────────────────────────────── */
 document.getElementById('fileInput').addEventListener('change', (e) => {
 selectedFiles = Array.from(e.target.files);
 renderFileList();
@@ -633,7 +667,8 @@ const statusEl = document.getElementById('assigneeStatus');
 if (!val) { statusEl.textContent = ''; assigneeId = null; return; }
 statusEl.className = 'assignee-status loading';
 statusEl.textContent = 'Looking up…';
-assigneeTimer = setTimeout(() => lookupAssignee(val), 600);
+const email = val.includes('@') ? val : val + '@zillowgroup.com';
+assigneeTimer = setTimeout(() => lookupAssignee(email), 600);
 }
 
 async function lookupAssignee(email) {
@@ -643,7 +678,7 @@ const res = await fetch(`${API_BASE}/rest/api/3/user/search?query=${encodeURICom
 const users = await res.json();
 const match = users.find(u =>
 (u.emailAddress || '').toLowerCase() === email.toLowerCase() ||
-(u.displayName || '').toLowerCase().includes(email.toLowerCase())
+(u.displayName || '').toLowerCase().includes(email.split('@')[0].toLowerCase())
 );
 if (match) {
 assigneeId = match.accountId;
